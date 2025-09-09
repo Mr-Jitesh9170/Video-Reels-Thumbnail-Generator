@@ -1,4 +1,4 @@
-import { ThumbnailGen } from "./thumbnail/thumbnail"
+import { ThumbnailGen } from "./pages/thumbnail"
 
 function App() {
   return (
