@@ -1,14 +1,14 @@
 const thumbnailResolution = [
     {
-        resolution: '1280×720',
+        resolution: "1280x720",
         for: "Youtube"
     },
     {
-        resolution: '1080×1350',
+        resolution: "1080x1350",
         for: "Instagram"
     },
     {
-        resolution: '1080×1920',
+        resolution: "1080x1920",
         for: "Instagram Reels"
     }
 ]

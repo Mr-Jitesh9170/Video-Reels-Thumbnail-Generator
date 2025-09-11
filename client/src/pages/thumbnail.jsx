@@ -1,37 +1,65 @@
+import { backendURL } from "@/apis/config"
 import { thumbnailResolution } from "@/data/data"
 import { Heading, HStack, Box, FileUpload, Icon, Button, Stack, Input, NativeSelect, Field, DownloadTrigger } from "@chakra-ui/react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { LuUpload } from "react-icons/lu"
+import { toaster } from "@/components/ui/toaster"
+import { PreviewButton } from "./previewImg"
 
 
 export const ThumbnailGen = () => {
     const [thumbnail, setThumbnail] = useState(
         {
             resolution: "",
-            timestamp: "00.03",
+            timestamp: "3",
             videoFile: ""
         }
     )
-    const generateThumbnail = async () => {
+    const [previewImg, setPreviewImg] = useState(
+        {
+            isPreview: false,
+            img: ""
+        }
+    )
+
+    const generateThumbnail = async (e) => {
+        e.preventDefault()
         const { resolution, timestamp, videoFile } = thumbnail
         if (!resolution || !timestamp || !videoFile) {
-            return "Missing fields"
+            toaster.create({
+                description: "Missing field",
+                type: "error",
+                closable: true,
+                duration: 1
+            })
+            return
         }
         try {
             const formData = new FormData()
             for (let name in thumbnail) {
-                formData.append(`${name}`, thumbnail[`${name}`])
+                formData.append(name, thumbnail[name])
             }
-            const res = await fetch("", {
+            const res = await fetch(`${backendURL}/thumbnail-generator`, {
                 method: "POST",
-                headers: "content-type/multiform"
+                body: formData,
             })
-            const results = res.json()
-            console.log(results)
+            const results = await res.json()
+            toaster.create({
+                description: results.message || "Thumbnail generated!",
+                type: "info",
+                closable: true,
+            })
+            console.log(backendURL + results.imgPath)
+            setPreviewImg({ ...previewImg, img: results.imgPath })
         } catch (error) {
-            console.log(error)
+            toaster.create({
+                description: error.message || "Something went wrong!",
+                type: "error",
+                closable: true,
+            })
+            console.error(error)
         } finally {
-            console.log("completed")
+            setPreviewImg({ ...previewImg, isPreview: true })
         }
     }
     const inputChange = (e) => {
@@ -41,8 +69,11 @@ export const ThumbnailGen = () => {
     const fileHandler = (file) => {
         setThumbnail({ ...thumbnail, videoFile: file.acceptedFiles[0] });
     }
+    useEffect(() => {
+        console.log(previewImg)
+    }, [previewImg])
     return (
-        <HStack width={"100vw"} flexDirection={"column"} display={"flex"} justifyContent={"space-around"} height={"vh"} padding={"0 30px"} gap={"9"}>
+        <HStack width={"100vw"} flexDirection={"column"} display={"flex"} height={"vh"} padding={"0 30px"} gap={"9"}>
             <Heading borderBottom={"1px solid grey"} textAlign={"center"} fontSize={"2xl"} p={"3"} rounded={"xl"} fontWeight="bold">Video Thubnail Generator</Heading>
             <FileUpload.Root alignItems="stretch" accept={"video/*"} maxFiles={10} onFileChange={fileHandler}>
                 <FileUpload.HiddenInput />
@@ -57,7 +88,7 @@ export const ThumbnailGen = () => {
                 </FileUpload.Dropzone>
                 <FileUpload.List showSize clearable={true} />
             </FileUpload.Root>
-            <Stack direction="row"  gap="4" >
+            <Stack direction="row" gap="4" >
                 <Field.Root >
                     <Field.Label>Timestamp</Field.Label>
                     <Input onChange={inputChange} name={`timestamp`} size={"sm"} placeholder="Enter Timestamp..." variant="subtle" />
@@ -65,7 +96,7 @@ export const ThumbnailGen = () => {
                 <Field.Root >
                     <Field.Label>Choose Resolution</Field.Label>
                     <NativeSelect.Root size={"sm"} variant={"subtle"}  >
-                        <NativeSelect.Field defaultValue={'1080×1350'} name={`resolution`} placeholder={`Instagram (1080×1350)`} onChange={inputChange}>
+                        <NativeSelect.Field name={`resolution`} placeholder={`choose resolution`} onChange={inputChange}>
                             {
                                 thumbnailResolution.map((_) => {
                                     return <option key={_.for} value={_.resolution}>{_.for} ({_.resolution})</option>
@@ -76,7 +107,8 @@ export const ThumbnailGen = () => {
                     </NativeSelect.Root>
                 </Field.Root>
             </Stack>
-            <Stack   direction="row" gap={"3"} >
+            <PreviewButton imgURL={`${backendURL + previewImg.img}`} />
+            <Stack direction="row" gap={"3"} >
                 <Button loadingText="Generating..." onClick={generateThumbnail} >Generate Thumbnail</Button>
                 <DownloadTrigger
                     fileName="sample.txt"

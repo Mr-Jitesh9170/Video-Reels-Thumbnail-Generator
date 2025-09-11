@@ -5,7 +5,8 @@ const ffmpegPath = require("@ffmpeg-installer/ffmpeg").path;
 ffmpeg.setFfmpegPath(ffmpegPath);
 
 exports.uploadVideoGenThumbnail = async (req, res, next) => {
-    const { resolution, timestamp } = req.body; 
+    const { resolution, timestamp } = req.body;
+    console.log(req.body, "<-------- req body")
     if (!resolution || !timestamp || !req.file) {
         return res.status(400).json({ message: "Missing fields or files!" });
     }
@@ -26,7 +27,7 @@ exports.uploadVideoGenThumbnail = async (req, res, next) => {
                 folder: outputDir,
                 size: resolution || "1080x1920",
             });
-        res.status(200).json({ message: "Thumbnail created!", imgPath: `/uploads/thumbnail${thumbnailName}` });
+        res.status(200).json({ message: "Thumbnail created!", imgPath: `/uploads/thumbnail/${thumbnailName}` });
     } catch (error) {
         next(error);
     }
